@@ -1,30 +1,42 @@
 package com.dongluh.ddz.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
 
 public abstract class BaseView extends SurfaceView implements Callback, Runnable {
 
-	private SurfaceHolder holder; // ¹ÜÀíSufaceView
-	private Thread pThread; // »æÍ¼Ïß³Ì
-	protected Paint paint; // Ä¬ÈÏ»­±Ê
-	private boolean isRunning; // ÊÇ·ñÔÚ»æÍ¼
+	protected Paint paint; //é»˜è®¤çš„ç”»ç¬”
+	public static final int TEXT_SIZE = 20;
+	
+	private SurfaceHolder holder; //Surfaceçš„å¤§ç®¡å®¶
+	private Thread pThread; //ç»˜å›¾çº¿ç¨‹
+	private boolean isRunning; //æ˜¯å¦åœ¨ç»˜å›¾
 	private static final int SPAN = 100;
+	
+	/**
+	 * å±å¹•å°ºå¯¸
+	 */
+	public static int winWidth, winHeight;
 	
 	public BaseView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
 		holder = getHolder();
 		holder.addCallback(this);
-		paint = new Paint(Paint.ANTI_ALIAS_FLAG);     // ÉèÖÃ¿¹¾â³İ
-		paint.setTextSize(25);
-		paint.setColor(Color.WHITE);
+		paint = new Paint(Paint.ANTI_ALIAS_FLAG); //è®¾ç½®æŠ—æ‹’å‡º
+		paint.setTextSize(TEXT_SIZE);
+		paint.setColor(Color.WHITE); //ç™½è‰²
+		
+		//è·å¾—å±å¹•å°ºå¯¸
+		winWidth = ((Activity)context).getWindowManager().getDefaultDisplay().getWidth();
+		winHeight = ((Activity)context).getWindowManager().getDefaultDisplay().getHeight();
 	}
 
 	@Override
@@ -32,14 +44,14 @@ public abstract class BaseView extends SurfaceView implements Callback, Runnable
 		while (isRunning) {
 			Canvas canvas = null;
 			try {
-				// Ëø¶¨»­²¼
+				// ï¿½ï¿½ï¿½ï¿½
 				synchronized (holder) {
 					canvas = holder.lockCanvas();
 				}
-				// »­Í¼Âß¼­
+				// ï¿½ï¿½Í¼ï¿½ß¼ï¿½
 				render(canvas);
 			} finally {
-				// ½âËø»­²¼£¬»Øµ½Ö÷Ïß³Ì£¬äÖÈ¾µ½ÆÁÄ»ÉÏ
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ß³Ì£ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½
 				if (canvas != null)
 					holder.unlockCanvasAndPost(canvas);
 			}
@@ -54,7 +66,7 @@ public abstract class BaseView extends SurfaceView implements Callback, Runnable
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-		// ¿ªÆô»æÍ¼Ïß³Ì
+		//å¼€å¯ç»˜å›¾çº¿ç¨‹
 		pThread = new Thread(this);
 		pThread.start();
 		isRunning = true;
@@ -67,7 +79,7 @@ public abstract class BaseView extends SurfaceView implements Callback, Runnable
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-		// Ïú»Ù»æÍ¼Ïß³Ì
+		//é”€æ¯ç»˜å›¾çº¿ç¨‹
 		isRunning = false;
 		if (pThread != null && pThread.isAlive()) {
 			try {
