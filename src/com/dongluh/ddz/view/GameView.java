@@ -1,6 +1,7 @@
 package com.dongluh.ddz.view;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import android.app.Activity;
@@ -16,6 +17,14 @@ import com.dongluh.ddz.R;
 import com.dongluh.ddz.model.Card;
 import com.dongluh.ddz.model.Player;
 
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
 public class GameView extends BaseView {
 
 	private Bitmap backCard; 	// 背景
@@ -23,14 +32,15 @@ public class GameView extends BaseView {
 	
 	public static final int PLAYER_MARGIN = 10;    // 玩家和屏幕边框的距离
 	
-	private List<Player> players = new ArrayList<Player>();
-	private List<Card> cards = new ArrayList<Card>();
+	private List<Player> players   = new ArrayList<Player>(); 	// 3个玩家
+	private List<Card> cards       = new ArrayList<Card>();     // 一副牌
+	private List<Card> bottomCards = new ArrayList<Card>(); 	// 3张底牌
 	// private Rect bgRect;
 	
-	public static int cardWidth; 	// 一张牌的宽度
-	public static int cardHeight; 	// 一张牌的宽度
-	public static int pokerWidth; 	// 整副牌的宽度
-	public static int pokerHeight; 	// 整副牌的宽度
+	public static int cardWidth; 		// 一张牌的宽度
+	public static int cardHeight; 		// 一张牌的宽度
+	public static int pokerWidth; 		// 整副牌的宽度
+	public static int pokerHeight; 		// 整副牌的宽度
 	
 	public static int miniCardWidth; 	// 一张小牌的宽度
 	public static int miniCardHeight; 	// 一张小牌的宽度
@@ -47,6 +57,8 @@ public class GameView extends BaseView {
 		initPlayer();
 		
 		intiCards();
+		
+		startNewGame();
 	}
 
 	private void initRes(Activity activity) {
@@ -54,6 +66,11 @@ public class GameView extends BaseView {
 		// bgRect = new Rect(0, 0, width, height);
 	}
 
+	private void startNewGame() {
+		cleanCards();
+		distributeCards();
+	}
+	
 	private void initPlayer() {
 		// 自己
 		Player me = new Player();
@@ -156,19 +173,84 @@ public class GameView extends BaseView {
 		}
 	}
 
+	/**
+	 * 洗牌
+	 */
+	public void cleanCards() { // 随机调换卡片位置
+		for (int i = 0; i < 100; i++) {
+			int rdIndex = (int) (Math.random() * cards.size());
+			if (rdIndex != 0) {
+				// 分别取出两张卡片
+				Card aCard = cards.get(rdIndex);
+				Card bCard = cards.get(0);
 
+				cards.set(0, aCard); // 交换卡片位置
+				cards.set(rdIndex, bCard);
+			}
+		}
+	}
 	
+	/**
+	 * 发牌
+	 */
+	private void distributeCards() {
+		// 先清理所有玩家的牌
+		for (Player player : players) {
+			player.getSentCards().clear();
+			player.getHandCards().clear();
+			player.getWillSendCards().clear();
+		}
+
+		// 给每个玩家17张
+		for (int i = 0; i < 17; i++) {
+			for (int j = 0; j < players.size(); j++) {
+				players.get(j).getHandCards().add(cards.get(3 * i + j));
+			}
+		}
+
+		// 剩下3张作为底牌
+		bottomCards.clear();
+		bottomCards.add(cards.get(51));
+		bottomCards.add(cards.get(52));
+		bottomCards.add(cards.get(53));
+		sortCards(bottomCards); // 对底牌排序
+
+		// 手牌排序
+		for (Player player : players) {
+			if (player.isLandlord()) {
+				// 给底牌给地主
+				player.getHandCards().addAll(bottomCards);
+			}
+			sortCards(player.getHandCards()); 
+		}
+	}
+
+	private void sortCards(List<Card> cards) {
+		Collections.sort(cards, this);
+	}
+
 	@Override
 	protected void render(Canvas canvas) {
-		
-		// draw background bitmap
-		canvas.drawBitmap(background, 0, 0, paint);    // 性能更高
-		// canvas.drawBitmap(background, null, bgRect, paint);
+		// 画背景
+		canvas.drawBitmap(background, 0, 0, paint);     
  
+		// 画玩家
 		synchronized (players) {
 			for (Player p : players) {
 				p.draw(canvas, paint);
 			}
+		}
+		
+		// 底牌的宽度
+		int bottomCardWidth = miniCardWidth * bottomCards.size();
+		// 底牌开始的X坐标
+		int bottomCardStartX = (winWidth - bottomCardWidth) / 2;
+		
+		for (int i = 0; i < bottomCards.size(); i++) {
+			//取出小牌
+			Bitmap miniIcon = bottomCards.get(i).getSmallImg();
+			//画小牌
+			canvas.drawBitmap(miniIcon, bottomCardStartX + i*miniCardWidth, 0, paint);
 		}
 	}
 
