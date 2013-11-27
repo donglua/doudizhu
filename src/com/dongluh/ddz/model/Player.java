@@ -2,6 +2,9 @@ package com.dongluh.ddz.model;
 
 import static com.dongluh.ddz.view.BaseView.TEXT_SIZE;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.dongluh.ddz.view.BaseView;
 import com.dongluh.ddz.view.GameView;
 
@@ -9,27 +12,66 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+
 /**
  * 玩家类
+ * 
  * @author donglu
  */
 public class Player {
-	
+
 	private String name;
-	
+
 	private String score;
-	
+
 	private Bitmap head;
-	
+
 	private int x;
-	
+
 	private int y;
-	
+
 	private boolean isLandlord;
-	
-	private boolean isComputer;    
-	
+
+	private boolean isComputer;
+
 	private Player next;
+
+	/**
+	 * 手里的牌
+	 */
+	private List<Card> handCards = new ArrayList<Card>();
+	/**
+	 * 即将打出去的牌
+	 */
+	private List<Card> willSendCards = new ArrayList<Card>();
+	/**
+	 * 打出去的牌
+	 */
+	private List<Card> sentCards = new ArrayList<Card>();
+
+	public List<Card> getHandCards() {
+		return handCards;
+	}
+
+	public void setHandCards(List<Card> handCards) {
+		this.handCards = handCards;
+	}
+
+	public List<Card> getWillSendCards() {
+		return willSendCards;
+	}
+
+	public void setWillSendCards(List<Card> willSendCards) {
+		this.willSendCards = willSendCards;
+	}
+
+	public List<Card> getSentCards() {
+		return sentCards;
+	}
+
+	public void setSentCards(List<Card> sentCards) {
+		this.sentCards = sentCards;
+	}
 
 	public String getName() {
 		return name;
@@ -103,19 +145,20 @@ public class Player {
 
 		Rect tempRect = new Rect();
 		paint.getTextBounds(name, 0, name.length(), tempRect);
-		int nameWidth = tempRect.right;        // name的宽度
-		if(x + nameWidth > BaseView.winWidth) {  // name超出屏幕
+		int nameWidth = tempRect.right; // name的宽度
+		if (x + nameWidth > BaseView.winWidth) { // name超出屏幕
 			x = BaseView.winWidth - nameWidth - GameView.PLAYER_MARGIN;
 		}
-		// 名字
-		canvas.drawText(name, x, y + head.getHeight() + TEXT_SIZE, paint);		
-		
+		// 画名字
+		canvas.drawText(name, x, y + head.getHeight() + TEXT_SIZE, paint);
+
 		paint.getTextBounds(scoreText, 0, scoreText.length(), tempRect);
-		int scoreWidth = tempRect.right;        // score的宽度
-		if(x + scoreWidth > BaseView.winWidth) {  // score超出屏幕
+		int scoreWidth = tempRect.right; // score的宽度
+		if (x + scoreWidth > BaseView.winWidth) { // score超出屏幕
 			sorceX = BaseView.winWidth - scoreWidth - GameView.PLAYER_MARGIN;
 		}
-		// 积分
-		canvas.drawText(scoreText, sorceX, y + head.getHeight() + TEXT_SIZE * 2, paint);
+		// 画积分
+		canvas.drawText(scoreText, sorceX,
+				y + head.getHeight() + TEXT_SIZE * 2, paint);
 	}
 }
