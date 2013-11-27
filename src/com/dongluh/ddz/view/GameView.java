@@ -1,17 +1,48 @@
 package com.dongluh.ddz.view;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.IntentSender;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.IntentSender.SendIntentException;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.content.res.Resources.Theme;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.GestureDetector.OnGestureListener;
+import android.view.MotionEvent;
+import android.view.GestureDetector.OnDoubleTapListener;
 
 import com.dongluh.ddz.R;
 import com.dongluh.ddz.model.Card;
@@ -27,7 +58,7 @@ import com.dongluh.ddz.model.Player;
  */
 public class GameView extends BaseView {
 
-	private Bitmap backCard; 	// 背景
+	public static Bitmap backCard; 	// 背景
 	private Bitmap background;  // 牌的背面
 	
 	public static final int PLAYER_MARGIN = 10;    // 玩家和屏幕边框的距离
@@ -49,6 +80,8 @@ public class GameView extends BaseView {
 	
 	public static int cardMargin;    // 牌之间的间距
 	
+	private Player me;
+	
 	public GameView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		
@@ -60,10 +93,52 @@ public class GameView extends BaseView {
 		
 		startNewGame();
 	}
-
+	
+	
+	GestureDetector detector;
 	private void initRes(Activity activity) {
 		background = getBitmap(R.drawable.bg, winWidth, winHeight);
 		// bgRect = new Rect(0, 0, width, height);
+		OnGestureListener gestureListener = new OnGestureListener() {
+			@Override
+			public boolean onSingleTapUp(MotionEvent e) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public void onShowPress(MotionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+					float distanceY) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public void onLongPress(MotionEvent e) {
+				// TODO Auto-generated method stub
+			}
+			
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+					float velocityY) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean onDown(MotionEvent e) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		};
+		detector = new GestureDetector(gestureListener);
+		detector.setOnDoubleTapListener(this);
 	}
 
 	private void startNewGame() {
@@ -73,7 +148,7 @@ public class GameView extends BaseView {
 	
 	private void initPlayer() {
 		// 自己
-		Player me = new Player();
+		me = new Player();
 		me.setComputer(false);
 		me.setName("donglu");
 		me.setLandlord(true);
@@ -254,6 +329,38 @@ public class GameView extends BaseView {
 		}
 	}
 
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		float y = event.getY();
+		float x = event.getX();
+		
+		if(event.getAction() == MotionEvent.ACTION_DOWN) {
+			//计算手牌宽度
+			int handCardsWidth  = (me.getHandCards().size()-1) * GameView.cardMargin + GameView.cardWidth;
+			//计算手牌开始的X
+			int handCardStartX = (GameView.winWidth - handCardsWidth) / 2;
+			//看是否在手牌范围内
+			if ((y >= winHeight - cardHeight - GameView.PLAYER_MARGIN) 
+					&& (x >= handCardStartX)
+					&& (x <= winWidth - handCardStartX)) {
+
+				int index = ((int)x - handCardStartX)/cardMargin; 
+				if(index > me.getHandCards().size()-1) { //判断是否越界
+					index = me.getHandCards().size()-1;
+				}
+				
+				Card card = me.getHandCards().get(index);
+				
+				if(me.getWillSendCards().contains(card)) { //说明已经被提起来，现在要放下去
+					me.getWillSendCards().remove(card);
+				} else {//说明要提起来
+					me.getWillSendCards().add(card);
+				}
+			}
+		}
+		return detector.onTouchEvent(event);
+	}
+	
 	public Bitmap getBitmap(int resId, int w, int h) {
 		Bitmap bitmap = Bitmap.createBitmap(w, h, Config.ARGB_8888);
 		Canvas canvas = new Canvas(bitmap);
@@ -261,5 +368,23 @@ public class GameView extends BaseView {
 		drawable.setBounds(0, 0, w, h);
 		drawable.draw(canvas);
 		return bitmap;
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent e) {
+		System.out.println("onDoubleTap");
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent e) {
+		System.out.println("onDoubleTapEvent");
+		return false;
+	}
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent e) {
+		System.out.println("onSingleTapConfirmed");
+		return false;
 	}
 }
