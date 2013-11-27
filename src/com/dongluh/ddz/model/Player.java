@@ -160,5 +160,42 @@ public class Player {
 		// 画积分
 		canvas.drawText(scoreText, sorceX,
 				y + head.getHeight() + TEXT_SIZE * 2, paint);
+		
+		
+		// 画扑克
+		if(isComputer) { //如果是电脑
+			
+			/*********************画手牌**********************/
+			// 卡片背面的Y
+			int backCardY = y + head.getHeight() + TEXT_SIZE * 2 + GameView.PLAYER_MARGIN;
+			// 画牌的背面
+			canvas.drawBitmap(GameView.backCard, x, backCardY, paint);
+			// 手牌数量的Y
+			int sizeY = backCardY + GameView.miniCardHeight + GameView.TEXT_SIZE;
+			//画卡片剩余数
+			canvas.drawText(""+handCards.size(), x, sizeY, paint);
+			
+			
+		 
+		} else { //如果是玩家自己
+			
+			/*********************画手牌**********************/
+			//计算手牌宽度
+			int handCardsWidth  = (handCards.size()-1) * GameView.cardMargin + GameView.cardWidth;
+			//计算手牌开始的X
+			int handCardStartX = (GameView.winWidth - handCardsWidth) / 2;
+			//开始画手牌
+			for (int i = 0; i < handCards.size(); i++) {
+				int cardX = handCardStartX + i * GameView.cardMargin; //卡片的x
+				int cardY = GameView.winHeight - GameView.cardHeight - GameView.PLAYER_MARGIN; // 卡片的Y
+				
+				Card card = handCards.get(i);
+				if(willSendCards.contains(card)) { //代表这张卡片被提起来了
+					cardY -= GameView.PLAYER_MARGIN; //减小Y值
+				}
+				Bitmap bigIcon = handCards.get(i).getBigImg(); //卡片 
+				canvas.drawBitmap(bigIcon, cardX, cardY, paint);
+			}
+		}
 	}
 }
