@@ -18,12 +18,26 @@ import com.dongluh.ddz.model.Player;
 
 public class GameView extends BaseView {
 
+	private Bitmap backCard; 	// 背景
+	private Bitmap background;  // 牌的背面
+	
 	public static final int PLAYER_MARGIN = 10;    // 玩家和屏幕边框的距离
-	private Bitmap background;
 	
 	private List<Player> players = new ArrayList<Player>();
 	private List<Card> cards = new ArrayList<Card>();
 	// private Rect bgRect;
+	
+	public static int cardWidth; 	// 一张牌的宽度
+	public static int cardHeight; 	// 一张牌的宽度
+	public static int pokerWidth; 	// 整副牌的宽度
+	public static int pokerHeight; 	// 整副牌的宽度
+	
+	public static int miniCardWidth; 	// 一张小牌的宽度
+	public static int miniCardHeight; 	// 一张小牌的宽度
+	public static int miniPokerWidth; 	// 整副小牌的宽度
+	public static int miniPokerHeight; 	// 整副小牌的宽度
+	
+	public static int cardMargin;    // 牌之间的间距
 	
 	public GameView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -88,7 +102,58 @@ public class GameView extends BaseView {
 
 
 	private void intiCards() {
+		// 初始化牌的尺寸
+		cardWidth = winWidth / 13;
+		cardHeight = winHeight / 6;
+		pokerWidth = cardWidth * 13;
+		pokerHeight = cardHeight * 5;
+
+		// 初始化小牌尺寸
+		miniCardHeight = cardHeight * 3 / 5;
+		miniCardWidth = cardWidth * 3 / 5;
+		miniPokerWidth = miniCardWidth * 13;
+		miniPokerHeight = miniCardHeight * 5;
 		
+		cardMargin = cardWidth * 3 / 5;
+		
+		// 整副牌
+		Bitmap poker = getBitmap(R.drawable.poker, pokerWidth, pokerHeight);
+		// 整副小牌
+		Bitmap pokerMini = getBitmap(R.drawable.poker_mini, miniPokerWidth,
+				miniPokerHeight);
+		// 卡片背面
+		backCard = Bitmap.createBitmap(pokerMini, 2 * miniCardWidth,
+				4 * miniCardHeight, miniCardWidth, miniCardHeight);
+		
+		// 把牌切割出来 
+		for (int row = 0; row < 5; row++) {
+			for (int col = 0; col < 13; col++) {
+				if (row == 4 && col > 1) {
+					break;
+				}
+				
+				Bitmap bigCard = Bitmap.createBitmap(poker, col * cardWidth,
+						row * cardHeight, cardWidth, cardHeight);
+
+				Bitmap miniCard = Bitmap.createBitmap(pokerMini, col
+						* miniCardWidth, row * miniCardHeight, miniCardWidth,
+						miniCardHeight);
+				
+				Card card = new Card();
+				card.setBigImg(bigCard);
+				card.setSmallImg(miniCard);
+				card.setColor(row);
+				card.setValue(col + 1);
+
+				if (col < 2) { 
+					card.setValue(card.getValue() + 13); // 14表示A，15表示2
+					if (row == 4) { // 大小王
+						card.setValue(col == 0 ? 17 : 16); // 16表示小王，17表示大王
+					}
+				}
+				cards.add(card);
+			}
+		}
 	}
 
 
